@@ -29,38 +29,34 @@ def main(args):
         # Find all files and add in sql
         for root, dirnames, filenames in os.walk(root):
             for filename in filenames:
-                if filename.endswith('.txt'):
-                    print "filename %s" % filename
-                    print "root %s" % root
+                if filename.endswith(('.txt', '.csv')):
                     table_name = root.rpartition("/")[-1]
-                    print table_name
+                    print "Processing file: %s in directory: %s" % (filename, root)
                     file_path = os.path.join(root, filename)
-                    print file_path
                     with open(file_path, "rb") as f:
                         reader = csv.reader(f)
-                        cols = reader.next();
+                        cols = reader.next()
                         cols = ["date"] + cols
                         if table_name not in tables_created:
-                            print "creating table"
+                            print "Creating table %s" % table_name
                             tables_created.add(table_name)
                             create_table(conn, table_name, cols)
 
                         file_data = [(filename,) + tuple(row) for row in reader]
-                        print file_data
                         insert_data_in_table(conn, table_name, cols, file_data)
 
     else:
         print("Error! cannot create the database connection.")
 
 
-def insert_data_in_table(conn, tablename, cols, data):
+def insert_data_in_table(conn, table_name, cols, data):
     """write data from csv to sqlite
     :param conn: database connection
-    :param tableName: table name
+    :param table_name: table name
     :param cols: table columns
     :param data: table data
     """
-    insert_table_sql = "INSERT into %s(" % tablename
+    insert_table_sql = "INSERT into %s(" % table_name
     for column in cols:
         insert_table_sql += ("%s," % column)
 
@@ -68,7 +64,6 @@ def insert_data_in_table(conn, tablename, cols, data):
     insert_table_sql += ") VALUES(%s" % ("?," * len(cols))
     insert_table_sql = insert_table_sql[:-1]
     insert_table_sql += ")"
-    print "insert query" + insert_table_sql
     execute_many_sql(conn, insert_table_sql, data)
 
 
@@ -84,7 +79,6 @@ def create_table(conn, tableName, cols):
         create_table_sql += "%s text," % column
     create_table_sql = create_table_sql[:-1]
     create_table_sql += ")"
-    print "create table query %s" % create_table_sql
     execute_single_sql(conn, create_table_sql)
 
 
@@ -123,8 +117,6 @@ def execute_many_sql(conn, sql_string, data):
     :param data:
     :return:
     """
-    print "sql_string" + sql_string
-    print data
     try:
         c = conn.cursor()
         c.executemany(sql_string, data)
