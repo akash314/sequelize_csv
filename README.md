@@ -1,2 +1,2 @@
-# sequelize_csv
+# Sequelize CSV
 Imports CSV files into SQLite.

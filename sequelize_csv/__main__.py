@@ -42,7 +42,8 @@ def main(args):
                             tables_created.add(table_name)
                             create_table(conn, table_name, cols)
 
-                        file_data = [(filename,) + tuple(row) for row in reader]
+                        date = filename.split(".",1)[0]
+                        file_data = [(date,) + tuple(row) for row in reader]
                         insert_data_in_table(conn, table_name, cols, file_data)
 
     else:
@@ -56,15 +57,15 @@ def insert_data_in_table(conn, table_name, cols, data):
     :param cols: table columns
     :param data: table data
     """
-    insert_table_sql = "INSERT into %s(" % table_name
+    insert_table_query = "INSERT OR IGNORE into %s(" % table_name
     for column in cols:
-        insert_table_sql += ("%s," % column)
+        insert_table_query += ("%s," % column)
 
-    insert_table_sql = insert_table_sql[:-1]
-    insert_table_sql += ") VALUES(%s" % ("?," * len(cols))
-    insert_table_sql = insert_table_sql[:-1]
-    insert_table_sql += ")"
-    execute_many_sql(conn, insert_table_sql, data)
+    insert_table_query = insert_table_query[:-1]
+    insert_table_query += ") VALUES(%s" % ("?," * len(cols))
+    insert_table_query = insert_table_query[:-1]
+    insert_table_query += ")"
+    execute_many_sql(conn, insert_table_query, data)
 
 
 def create_table(conn, tableName, cols):
@@ -74,12 +75,17 @@ def create_table(conn, tableName, cols):
     :param cols: table columns
     """
 
-    create_table_sql = "CREATE TABLE IF NOT EXISTS %s (" % tableName
+    create_table_query = "CREATE TABLE IF NOT EXISTS %s (" % tableName
     for column in cols:
-        create_table_sql += "%s text," % column
-    create_table_sql = create_table_sql[:-1]
-    create_table_sql += ")"
-    execute_single_sql(conn, create_table_sql)
+        create_table_query += "%s text," % column
+    create_table_query = create_table_query[:-1]
+    create_table_query += ")"
+    execute_single_sql(conn, create_table_query)
+
+    unique_key = ",".join(cols)
+    unique_index_query = "CREATE UNIQUE INDEX %s_index ON %s (%s)" % (tableName, tableName, unique_key)
+    print unique_index_query
+    execute_single_sql(conn, unique_index_query)
 
 
 def create_connection(db_file):
