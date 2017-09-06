@@ -1,7 +1,9 @@
 docstr = """
 Sequelize CSV
 
-Usage: sequelize_csv.py <root_path> [-h][-d <db_file>]
+Usage:
+    sequelize_csv.py <root_path> [-h][-d <db_file>]
+    sequelize_csv.py report <module>
 
 Options:
   -h --help                                     show this message and exit
@@ -11,6 +13,7 @@ Options:
 import csv
 import sqlite3
 import os
+import imp
 
 from docopt import docopt
 
@@ -18,6 +21,17 @@ import query_processor
 
 
 def main(args):
+    if args.get("--database"):
+        database = args.get("--database")
+    else:
+        database = "redi.db"
+    conn = create_connection(database)
+
+    if args.get("report"):
+        if args.get("<module>"):
+            generate_reports(args.get("<module>"), conn)
+            return
+
     if args.get("<root_path>"):
         root = args.get("<root_path>")
         root = root.rstrip("/")
@@ -25,13 +39,8 @@ def main(args):
         print "Invalid path of root directory."
         return
 
-    if args.get("--database"):
-        database = args.get("--database")
-    else:
-        database = "redi.db"
-
     # Create database connection
-    conn = create_connection(database)
+    #conn = create_connection(database)
     if conn is not None:
         query_processor.create_files_processed_table(conn)
         # Find all files and add in sql
@@ -58,6 +67,15 @@ def main(args):
 
     print "All files processed!"
 
+def generate_reports(module, conn):
+    """
+    Generate reports
+    :return:
+    """
+    report_module = imp.load_source('report_module', module)
+    report_module.start_up()
+    report_module.sql_run(conn)
+    report_module.report()
 
 def create_connection(db_file):
     """
