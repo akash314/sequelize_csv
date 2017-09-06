@@ -1,26 +1,29 @@
 docstr = """
 Sequelize CSV
 
-Usage: sequelize_csv.py [-h][-r <root dir>][-d <db file>]
+Usage: sequelize_csv.py <root_path> [-h][-d <db_file>]
 
 Options:
   -h --help                                     show this message and exit
-  -r <root dir> --root <root dir>               root directory
-  -d <db file> --database <db file>             database file
+  -d <db_file> --database <db_file>             database file
 """
 
 import csv
 import sqlite3
 import os
+
 from docopt import docopt
+
 import query_processor
 
 
 def main(args):
-    if args.get("--root"):
-        root = args.get("--root")
+    if args.get("<root_path>"):
+        root = args.get("<root_path>")
+        root = root.rstrip("/")
     else:
-        root = "."
+        print "Invalid path of root directory."
+        return
 
     if args.get("--database"):
         database = args.get("--database")
@@ -52,6 +55,8 @@ def main(args):
 
     else:
         print("Error! cannot create the database connection.")
+
+    print "All files processed!"
 
 
 def create_connection(db_file):
