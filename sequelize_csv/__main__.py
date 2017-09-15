@@ -3,24 +3,27 @@ Sequelize CSV
 
 Usage:
     sequelize_csv.py <root_path> [-h][-d <db_file>]
-    sequelize_csv.py report <module>
+    sequelize_csv.py report <sql_file>[-a][-d <db_file>]
 
 Options:
   -h --help                                     show this message and exit
   -d <db_file> --database <db_file>             database file
+  -a --all                                      run against all sites
 """
 
 import csv
 import sqlite3
 import os
-import imp
 
 from docopt import docopt
 
 import query_processor
+import report_helper
 
 
 def main(args):
+
+    # Create database connection
     if args.get("--database"):
         database = args.get("--database")
     else:
@@ -28,21 +31,33 @@ def main(args):
     conn = create_connection(database)
 
     if args.get("report"):
-        if args.get("<module>"):
-            generate_reports(args.get("<module>"), conn)
+        # Run sql query
+        if args.get("<sql_file>"):
+            report_helper.execute_sql(conn, args.get("<sql_file>"), args.get("--all"))
             return
 
-    if args.get("<root_path>"):
-        root = args.get("<root_path>")
-        root = root.rstrip("/")
     else:
-        print "Invalid path of root directory."
-        return
+        # Sequelize CSVs
+        if args.get("<root_path>"):
+            root = args.get("<root_path>")
+            root = root.rstrip("/")
+        else:
+            print "Invalid path of root directory."
+            return
 
-    # Create database connection
-    #conn = create_connection(database)
+        sequelize(conn, root)
+
+
+def sequelize(conn, root):
+    """
+    Store data from CSVs to MySQL tables
+    :param conn: database connection
+    :param root: path of the root directory
+    :return:
+    """
     if conn is not None:
         query_processor.create_files_processed_table(conn)
+
         # Find all files and add in sql
         for root, dirnames, filenames in os.walk(root):
             for filename in filenames:
@@ -64,18 +79,8 @@ def main(args):
 
     else:
         print("Error! cannot create the database connection.")
-
     print "All files processed!"
 
-def generate_reports(module, conn):
-    """
-    Generate reports
-    :return:
-    """
-    report_module = imp.load_source('report_module', module)
-    report_module.start_up()
-    report_module.sql_run(conn)
-    report_module.report()
 
 def create_connection(db_file):
     """
