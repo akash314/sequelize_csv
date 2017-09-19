@@ -57,6 +57,7 @@ def sequelize(conn, root):
     """
     if conn is not None:
         query_processor.create_files_processed_table(conn)
+        tablesCreated = set()
 
         # Find all files and add in sql
         for root, dirnames, filenames in os.walk(root):
@@ -70,8 +71,10 @@ def sequelize(conn, root):
                             reader = csv.reader(f)
                             cols = reader.next()
                             cols = ["date"] + cols
-                            print "Creating table %s" % parent_dir
-                            query_processor.create_table(conn, parent_dir, cols)
+                            if parent_dir not in tablesCreated:
+                                tablesCreated.add(parent_dir)
+                                print "Creating table %s" % parent_dir
+                                query_processor.create_table(conn, parent_dir, cols)
 
                             date = filename.split(".", 1)[0]
                             file_data = [(date,) + tuple(row) for row in reader]

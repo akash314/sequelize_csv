@@ -1,3 +1,6 @@
+import sys
+import csv
+
 from sqlite3 import OperationalError
 
 
@@ -34,20 +37,23 @@ def run_across_all_sites(conn, sql_commands):
     c = conn.cursor()
     c.execute(get_sites_query)
     rows = c.fetchall()
+    results_list = []
+    writer = csv.writer(sys.stdout)
 
     for row in rows:
         for command in sql_commands:
             # This will skip and report errors
             try:
                 final_query = command.replace('%table%', row[2])
-                print final_query
                 c.execute(final_query)
                 result = c.fetchall()
                 for result_row in result:
-                    print result_row
+                    writer.writerow(result_row)
 
             except OperationalError, msg:
                 print "Command skipped: ", msg
+
+    print results_list;
 
 
 def run_commands(conn, sql_commands):
@@ -58,6 +64,8 @@ def run_commands(conn, sql_commands):
     :return
     """
 
+    writer = csv.writer(sys.stdout)
+
     # Execute every command from the input file
     for command in sql_commands:
         # This will skip and report errors
@@ -67,7 +75,7 @@ def run_commands(conn, sql_commands):
             c.execute(command)
             result = c.fetchall()
             for row in result:
-                print row
+                writer.writerow(row)
 
         except OperationalError, msg:
             print "Command skipped: ", msg
