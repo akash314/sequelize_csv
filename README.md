@@ -2,6 +2,12 @@
 
 Imports CSV files into SQLite.
 
+To install the module navigate inside the sequelize_csv directory and run the following command:
+
+```
+sudo pip install -e .
+```
+
 The directory which will serve as the root for the import process is expected to have the following structure.
 
 ```
@@ -17,7 +23,7 @@ root
     └───date3.txt
 ```
 
-Then you can start the import with the command:
+Then you can start the import with the following command:
 ```
 sequelize_csv <path_to_root> -d <database_file_path>
 ```
@@ -39,7 +45,7 @@ sequelize_csv report sql/selectAll.sql -a -d redi.db
 ```
 
 
-###### Prerequisites
+##### Prerequisites
 
 - Python 2.7
 - SQLite 3.9.0 or higher
